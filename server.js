@@ -2,6 +2,7 @@ import http from "node:http";
 import { getDataFromDB } from "./database/db.js";
 import { sendJSONResponse } from "./utils/SendJSONResponse.js";
 import { getDataByPathParams } from "./utils/getDataByPathParams.js";
+import { getDataBySearchParams } from "./utils/getDataBySearchParams.js";
 
 const PORT = 8000;
 
@@ -12,8 +13,15 @@ const server = http.createServer(async (req, res) => {
     error: "not found",
     message: "The requested route does not exist",
   };
-  if (req.url === `/api` && req.method === `GET`) {
-    sendJSONResponse(res, 200, destionation);
+
+  const requrl = new URL(req.url, `http://${req.headers.host}`);
+
+  let urlobj = Object.fromEntries(requrl.searchParams);
+
+  if (requrl.pathname === `/api` && req.method === `GET`) {
+    let filteredData = getDataBySearchParams(destionation, urlobj);
+
+    sendJSONResponse(res, 200, filteredData);
   } else if (req.url.startsWith(`/api/continent`) && req.method === `GET`) {
     const continent = req.url.split(`/`).pop();
 
